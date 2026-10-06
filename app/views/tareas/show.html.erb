@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @tarea %>
+
+<div>
+  <%= link_to "Edit this tarea", edit_tarea_path(@tarea) %> |
+  <%= link_to "Back to tareas", tareas_path %>
+
+  <%= button_to "Destroy this tarea", @tarea, method: :delete %>
+</div>
