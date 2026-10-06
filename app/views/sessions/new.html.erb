@@ -1,0 +1,7 @@
+<h1>Iniciar sesión</h1>
+
+<%= form_with url: session_path do |form| %>
+  <%= form.text_field :username, required: true, autofocus: true, autocomplete: "Usuario", placeholder: "Usuario", value: params[:Usuario] %><br>
+  <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Contraseña" %><br>
+  <%= form.submit "Entrar" %>
+<% end %>

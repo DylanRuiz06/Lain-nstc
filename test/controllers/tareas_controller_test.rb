@@ -3,6 +3,7 @@ require "test_helper"
 class TareasControllerTest < ActionDispatch::IntegrationTest
   setup do
     @tarea = tareas(:one)
+    sign_in_as(users(:one))
   end
 
   test "should get index" do
@@ -44,5 +45,23 @@ class TareasControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to tareas_url
+  end
+
+  test "sin sesión redirige al login" do
+    sign_out
+
+    get tareas_url
+    assert_redirected_to new_session_path
+  end
+
+  test "root requiere sesión y con sesión muestra tareas" do
+    sign_out
+
+    get root_url
+    assert_redirected_to new_session_path
+
+    sign_in_as(users(:one))
+    get root_url
+    assert_response :success
   end
 end

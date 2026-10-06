@@ -24,6 +24,14 @@
   </head>
 
   <body>
+    <% if authenticated? %>
+      <nav>
+        <span>Sesión: <%= Current.user.username %></span>
+        <%= button_to "Cerrar sesión", session_path, method: :delete %>
+      </nav>
+    <% end %>
+    <%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
+    <%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
     <%= yield %>
   </body>
 </html>

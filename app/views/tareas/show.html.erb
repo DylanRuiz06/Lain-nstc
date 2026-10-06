@@ -3,8 +3,8 @@
 <%= render @tarea %>
 
 <div>
-  <%= link_to "Edit this tarea", edit_tarea_path(@tarea) %> |
-  <%= link_to "Back to tareas", tareas_path %>
+  <%= link_to "Editar tarea", edit_tarea_path(@tarea) %> |
+  <%= link_to "Volver a tareas", tareas_path %>
 
-  <%= button_to "Destroy this tarea", @tarea, method: :delete %>
+  <%= button_to "Eliminar tarea", @tarea, method: :delete %>
 </div>
