@@ -1,0 +1,12 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('csrf/', views.csrf_view, name='csrf'),
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('me/', views.me_view, name='me'),
+    path('users/', views.users_collection, name='users-collection'),
+    path('users/<int:pk>/', views.user_detail, name='user-detail'),
+]
