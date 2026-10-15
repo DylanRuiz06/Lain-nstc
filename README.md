@@ -1,36 +1,36 @@
 # Lain
 
-Aplicación web para gestionar usuarios, con un frontend moderno y una API backend preparada para crecer hacia la planificación de acuarios. 🐠
+Aplicación web para gestionar usuarios, con un frontend moderno y una API backend.
 
-## 🎬 Video
+## Video
 
 Mira el video del proyecto en YouTube:
 
-▶️ [Ver video de Lain](https://youtu.be/03yrmhcbDz8)
+[Ver video de Lain](https://youtu.be/03yrmhcbDz8)
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 ### Frontend
 
-- 🟢 [Vue 3](https://vuejs.org/)
-- ⚡ [Vite](https://vite.dev/)
-- 🧭 [Vue Router](https://router.vuejs.org/)
-- 📦 Node.js y npm
+- [Vue 3](https://vuejs.org/)
+- [Vite](https://vite.dev/)
+- [Vue Router](https://router.vuejs.org/)
+- Node.js y npm
 
 ### Backend
 
-- 🐍 [Python](https://www.python.org/)
-- 🎸 [Django 6](https://www.djangoproject.com/)
-- 🔐 Django Sessions, CSRF y CORS
-- 🗃️ SQLite
+- [Python](https://www.python.org/)
+- [Django 6](https://www.djangoproject.com/)
+- Django Sessions, CSRF y CORS
+- SQLite
 
-## 📋 Requisitos
+## Requisitos
 
 - Node.js 18 o superior
 - npm
 - Python 3.12 o superior
 
-## 🚀 Cómo levantar el proyecto
+## Cómo levantar el proyecto
 
 Clona el repositorio y entra en la carpeta del proyecto:
 
@@ -91,7 +91,7 @@ Abre la aplicación en [http://localhost:5173](http://localhost:5173).
 
 El servidor de Vite redirige las peticiones `/api` hacia Django mediante el proxy configurado en `vite.config.js`.
 
-## 📦 Comandos disponibles
+## Comandos disponibles
 
 ### Frontend
 
@@ -109,7 +109,7 @@ python manage.py migrate     # Aplicar migraciones
 python manage.py createsuperuser  # Crear usuario administrador
 ```
 
-## 📁 Estructura principal
+## Estructura principal
 
 ```text
 lain/
@@ -124,19 +124,19 @@ lain/
 └── README.md
 ```
 
-## 🔮 Próximamente: planificador de acuarios
+## Próximamente: planificador de acuarios
 
-La evolución prevista de Lain es convertirse en un planificador inteligente para acuarios. 🐟 🐸 🌿
+La evolución prevista de Lain es convertirse en un planificador inteligente para acuarios.
 
 El objetivo es ayudar a crear setups equilibrados y compatibles mediante:
 
-- 🐠 Preparación de setups para peces.
-- 🐸 Planificación de espacios para anfibios.
-- 🌱 Selección y organización de plantas.
-- ⚖️ Recomendaciones basadas en compatibilidad, tamaño y necesidades de cada especie.
-- ➕ Posibilidad de agregar nuevas especies al catálogo.
-- 📊 Organización de los habitantes, plantas, equipamiento y condiciones del acuario.
+- Preparación de setups para peces.
+- Planificación de espacios para anfibios.
+- Selección y organización de plantas.
+- Recomendaciones basadas en compatibilidad, tamaño y necesidades de cada especie.
+- Posibilidad de agregar nuevas especies al catálogo.
+- Organización de los habitantes, plantas, equipamiento y condiciones del acuario.
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto se encuentra en desarrollo.
