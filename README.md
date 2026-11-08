@@ -85,6 +85,43 @@ navegador trabaja contra rutas relativas `/api/...` y las cookies de sesión y
 CSRF funcionan sin problemas. CORS y `CSRF_TRUSTED_ORIGINS` también están
 configurados para `http://localhost:5173`.
 
+## Deploy en Render
+
+Render ejecuta **un solo servicio web**: Django sirve la API y el build de Vue
+(WhiteNoise entrega los assets de `frontend/dist` y una vista catch-all devuelve
+`index.html` para que Vue Router funcione al recargar).
+
+Crea un **Web Service** apuntando a este repositorio con:
+
+- **Build Command**: `./build.sh`
+- **Start Command**:
+  ```bash
+  cd backend && python manage.py seed_admin && python manage.py seed_data && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+  ```
+
+`build.sh` instala las dependencias de Node, compila Vue, instala las
+dependencias de Python, ejecuta `collectstatic` y aplica las migraciones.
+
+El cliente de Vue llama rutas relativas `/api/...`, así que el login, el token
+CSRF y las cookies de sesión funcionan en el mismo origen del servicio (no hace
+falta CORS en producción).
+
+### Variables de entorno
+
+| Variable | Valor de ejemplo | Notas |
+| --- | --- | --- |
+| `DEBUG` | `0` | Obligatorio en producción. Con `0` se activan `SESSION_COOKIE_SECURE` y `CSRF_COOKIE_SECURE`. |
+| `SECRET_KEY` | cadena larga y aleatoria | No reutilizar el valor de desarrollo. |
+| `ADMIN_PASSWORD` | contraseña segura | Contraseña del usuario `admin`. **Nunca se sube a Git**; se define en el panel de Render (Environment). |
+| `ALLOWED_HOSTS` | `lain.onrender.com` | Dominio(s) del servicio, separados por coma. |
+| `CSRF_TRUSTED_ORIGINS` | `https://lain.onrender.com` | Origen(es) con esquema, separados por coma. |
+
+> **ADVERTENCIA:** el disco de SQLite en Render es efímero. **Los datos se
+> reinician en cada redeploy.** Por eso `seed_admin` y `seed_data` son
+> idempotentes y se ejecutan en cada arranque: recrean el admin y los datos de
+> ejemplo sin duplicarlos. Para conservar datos reales habría que migrar a una
+> base de datos gestionada y un disco persistente.
+
 ## Estructura
 
 ```text
@@ -99,6 +136,7 @@ lain/
 │   │   ├── api.js     # fetch con credentials + CSRF
 │   │   └── router/    # rutas y guard
 │   └── vite.config.js
+├── build.sh           # build de Vue + collectstatic + migrate (Render)
 └── README.md
 ```
 

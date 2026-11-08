@@ -125,15 +125,17 @@ class Command(BaseCommand):
     help = 'Carga regiones, biotopos y especies de ejemplo (idempotente).'
 
     def handle(self, *args, **options):
+        biotopes = {}
         for region_name, biotope_names in REGIONS.items():
             region, _ = Region.objects.get_or_create(name=region_name)
             for biotope_name in biotope_names:
-                Biotope.objects.get_or_create(name=biotope_name, region=region)
+                biotope, _ = Biotope.objects.get_or_create(name=biotope_name, region=region)
+                biotopes[(region_name, biotope_name)] = biotope
 
         for item in SPECIES:
             data = dict(item)
             biotope_name, region_name = data.pop('biotope')
-            biotope = Biotope.objects.get(name=biotope_name, region__name=region_name)
+            biotope = biotopes[(region_name, biotope_name)]
             Species.objects.update_or_create(
                 scientific_name=data['scientific_name'],
                 defaults={**data, 'biotope': biotope},

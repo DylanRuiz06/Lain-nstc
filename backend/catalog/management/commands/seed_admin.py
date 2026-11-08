@@ -5,17 +5,14 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Crea (o actualiza) el usuario admin del panel.'
+    help = 'Crea (o actualiza) el usuario admin del panel. Idempotente.'
 
     def handle(self, *args, **options):
         username = 'admin'
         env_password = os.environ.get('ADMIN_PASSWORD')
         password = env_password or 'admin12345'
 
-        user, created = User.objects.get_or_create(
-            username=username,
-            defaults={'is_staff': True, 'is_superuser': True},
-        )
+        user, created = User.objects.get_or_create(username=username)
         user.is_staff = True
         user.is_superuser = True
         if created or env_password:
