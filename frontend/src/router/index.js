@@ -1,17 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { api } from '../api.js'
 import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import UserListView from '../views/UserListView.vue'
-import UserFormView from '../views/UserFormView.vue'
+import RegionsView from '../views/RegionsView.vue'
+import RegionFormView from '../views/RegionFormView.vue'
+import BiotopesView from '../views/BiotopesView.vue'
+import BiotopeFormView from '../views/BiotopeFormView.vue'
+import SpeciesView from '../views/SpeciesView.vue'
+import SpeciesFormView from '../views/SpeciesFormView.vue'
 
 const routes = [
-  { path: '/', redirect: '/users' },
+  { path: '/', redirect: '/species' },
   { path: '/login', component: LoginView },
-  { path: '/register', component: RegisterView },
-  { path: '/users', component: UserListView, meta: { requiresAuth: true } },
-  { path: '/users/create', component: UserFormView, meta: { requiresAuth: true } },
-  { path: '/users/:id/edit', component: UserFormView, props: true, meta: { requiresAuth: true } },
+  { path: '/regions', component: RegionsView, meta: { requiresAuth: true } },
+  { path: '/regions/new', component: RegionFormView, meta: { requiresAuth: true } },
+  { path: '/regions/:id/edit', component: RegionFormView, props: true, meta: { requiresAuth: true } },
+  { path: '/biotopes', component: BiotopesView, meta: { requiresAuth: true } },
+  { path: '/biotopes/new', component: BiotopeFormView, meta: { requiresAuth: true } },
+  { path: '/biotopes/:id/edit', component: BiotopeFormView, props: true, meta: { requiresAuth: true } },
+  { path: '/species', component: SpeciesView, meta: { requiresAuth: true } },
+  { path: '/species/new', component: SpeciesFormView, meta: { requiresAuth: true } },
+  { path: '/species/:id/edit', component: SpeciesFormView, props: true, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
@@ -19,16 +27,29 @@ const router = createRouter({
   routes,
 })
 
-// Guardia global: si la ruta exige auth, comprobamos la sesión en Django.
-// Si no hay sesión (403), redirigimos a /login.
-router.beforeEach(async (to) => {
-  if (!to.meta.requiresAuth) return true
-  try {
-    await api.me()
-    return true
-  } catch {
-    return '/login'
+// El guard solo mejora la experiencia. La seguridad real está en Django:
+// cada endpoint de administración responde 401 sin sesión y 403 si no es staff.
+let authPromise = null
+
+export function resetAuthCache() {
+  authPromise = null
+}
+
+function checkAuth() {
+  if (!authPromise) {
+    authPromise = api.me().then(() => true).catch(() => false)
   }
+  return authPromise
+}
+
+router.beforeEach(async (to) => {
+  if (to.meta.requiresAuth && !(await checkAuth())) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+  if (to.path === '/login' && (await checkAuth())) {
+    return '/species'
+  }
+  return true
 })
 
 export default router

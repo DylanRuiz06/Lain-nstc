@@ -1,142 +1,108 @@
 # Lain
 
-Aplicación web para gestionar usuarios, con un frontend moderno y una API backend.
+Lain es un planificador de acuarios para principiantes. Su núcleo es un motor de
+compatibilidad entre especies que necesita un catálogo con datos biológicos
+correctos. Este repositorio contiene el **panel de administración** que alimenta
+ese catálogo.
 
-## Video
+## Qué administra el panel
 
-Mira el video del proyecto en YouTube:
+- **Regiones** → **Biotopos** → **Especies** (jerarquía con claves foráneas).
+- Especies con sus parámetros biológicos: temperatura, pH, GH, tamaño adulto,
+  litros mínimos, grupo mínimo, dieta, temperamento, zona de natación y
+  comportamiento.
+- Todos los formularios usan dropdowns para las relaciones: la región de un
+  biotopo y la región + biotopo de una especie. Nunca se escribe un ID a mano.
 
-[Ver video de Lain](https://youtu.be/03yrmhcbDz8)
+## Validaciones en back-end
 
-## Tecnologías
+Las reglas de los datos sensibles de `Species` viven en `Species.clean()` y se
+ejecutan con `full_clean()` antes de guardar desde la API:
 
-### Frontend
+- `ph_min <= ph_max`, ambos entre 0 y 14.
+- `temp_min < temp_max`, ambos entre 0 y 40 °C.
+- `gh_min <= gh_max` y `gh_min >= 0`.
+- `adult_size_cm > 0`, `min_tank_liters > 0`, `min_group_size >= 1`.
+- `scientific_name` único, con mensaje claro.
+- El biotopo debe existir; si se envía `region_id`, debe pertenecer a esa región.
 
-- [Vue 3](https://vuejs.org/)
-- [Vite](https://vite.dev/)
-- [Vue Router](https://router.vuejs.org/)
-- Node.js y npm
+Cuando falla, la API responde `400` con
+`{"errors": {"campo": ["mensaje"], "__all__": ["mensaje"]}}` y Vue muestra los
+mensajes junto a cada campo. No hay reglas de rango duplicadas en JavaScript.
 
-### Backend
+## Dropdown dependiente
 
-- [Python](https://www.python.org/)
-- [Django 6](https://www.djangoproject.com/)
-- Django Sessions, CSRF y CORS
-- SQLite
+En el formulario de especie, al elegir una región se consulta
+`GET /api/regions/<id>/biotopes/` y se recarga el select de biotopos. Al editar,
+primero se carga la especie, se deduce su región desde el biotopo, se cargan los
+biotopos de esa región y recién entonces se selecciona el biotopo guardado.
+
+## Autenticación
+
+Sesiones de Django + CSRF + CORS. Solo usuarios con `is_staff=True` pueden usar
+el panel. Los endpoints de administración responden `401` sin sesión y `403` si
+el usuario no es staff (decorador `admin_required`). El guard de Vue solo mejora
+la experiencia; la seguridad real está en Django.
 
 ## Requisitos
 
-- Node.js 18 o superior
-- npm
-- Python 3.12 o superior
+- Python 3.12 o superior (probado con Python 3.14 y Django 6.0.6).
+- Node.js 18 o superior y npm.
 
-## Cómo levantar el proyecto
+## Ejecutar en local
 
-Clona el repositorio y entra en la carpeta del proyecto:
-
-```bash
-git clone <URL_DEL_REPOSITORIO>
-cd lain
-```
-
-### 1. Levantar el backend
-
-Abre una terminal y ejecuta:
+### Backend
 
 ```bash
 cd backend
 python -m venv venv
-```
-
-Activa el entorno virtual:
-
-**Linux/macOS**
-
-```bash
-source venv/bin/activate
-```
-
-**Windows PowerShell**
-
-```powershell
-venv\Scripts\Activate.ps1
-```
-
-Instala las dependencias y ejecuta las migraciones:
-
-```bash
+source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py seed_admin        # admin / admin12345 por defecto (solo desarrollo)
+python manage.py seed_data         # regiones, biotopos y especies de ejemplo
+python manage.py runserver         # http://localhost:8000
 ```
 
-Inicia el servidor Django:
+Para usar otra contraseña de administrador:
 
 ```bash
-python manage.py runserver
+ADMIN_PASSWORD=mi_clave_segura python manage.py seed_admin
 ```
 
-El backend estará disponible en `http://127.0.0.1:8000`.
+### Frontend
 
-### 2. Levantar el frontend
-
-En otra terminal, desde la raíz del proyecto:
+En otra terminal:
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev                        # http://localhost:5173
 ```
 
-Abre la aplicación en [http://localhost:5173](http://localhost:5173).
+Vite redirige `/api` a `http://localhost:8000` (ver `vite.config.js`), así que el
+navegador trabaja contra rutas relativas `/api/...` y las cookies de sesión y
+CSRF funcionan sin problemas. CORS y `CSRF_TRUSTED_ORIGINS` también están
+configurados para `http://localhost:5173`.
 
-El servidor de Vite redirige las peticiones `/api` hacia Django mediante el proxy configurado en `vite.config.js`.
-
-## Comandos disponibles
-
-### Frontend
-
-```bash
-npm run dev      # Servidor de desarrollo
-npm run build    # Compilación para producción
-npm run preview  # Vista previa de la compilación
-```
-
-### Backend
-
-```bash
-python manage.py runserver  # Servidor de desarrollo
-python manage.py migrate     # Aplicar migraciones
-python manage.py createsuperuser  # Crear usuario administrador
-```
-
-## Estructura principal
+## Estructura
 
 ```text
 lain/
-├── backend/          # API y lógica de Django
-│   ├── config/       # Configuración del proyecto
-│   ├── users/        # Gestión de usuarios
+├── backend/
+│   ├── config/        # settings y urls del proyecto Django
+│   ├── catalog/       # modelos, vistas, urls y comandos seed
 │   └── manage.py
-├── frontend/         # Aplicación Vue
+├── frontend/
 │   ├── src/
-│   ├── package.json
+│   │   ├── views/     # login, listas y formularios
+│   │   ├── api.js     # fetch con credentials + CSRF
+│   │   └── router/    # rutas y guard
 │   └── vite.config.js
 └── README.md
 ```
 
-## Próximamente: planificador de acuarios
+## Fuera de alcance
 
-La evolución prevista de Lain es convertirse en un planificador inteligente para acuarios.
-
-El objetivo es ayudar a crear setups equilibrados y compatibles mediante:
-
-- Preparación de setups para peces.
-- Planificación de espacios para anfibios.
-- Selección y organización de plantas.
-- Recomendaciones basadas en compatibilidad, tamaño y necesidades de cada especie.
-- Posibilidad de agregar nuevas especies al catálogo.
-- Organización de los habitantes, plantas, equipamiento y condiciones del acuario.
-
-## Licencia
-
-Este proyecto se encuentra en desarrollo.
+No se incluyen colores de especies, temas visuales, relaciones entre especies ni
+generación de setups. El panel solo mantiene el catálogo que usará el core.

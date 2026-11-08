@@ -1,24 +1,39 @@
-// Cliente HTTP mínimo para hablar con Django usando sesiones + CSRF.
-// - credentials: 'include' => el navegador envía la cookie de sesión.
-// - Antes de cualquier POST/PUT/DELETE pedimos GET /api/csrf/ para que
-//   Django emita la cookie csrftoken, y la devolvemos en X-CSRFToken.
+// Cliente HTTP mínimo para la API de Django (sesiones + CSRF).
+// La seguridad real (401/403, is_staff, validaciones) está en Django.
 
-function getCookie(name) {
-  const m = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'))
-  return m ? decodeURIComponent(m[2]) : ''
+export class ApiError extends Error {
+  constructor(message, status, data) {
+    super(message)
+    this.status = status
+    this.data = data
+  }
 }
 
-export async function ensureCsrf() {
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'))
+  return match ? decodeURIComponent(match[2]) : ''
+}
+
+async function ensureCsrf() {
   if (!getCookie('csrftoken')) {
     await fetch('/api/csrf/', { credentials: 'include' })
   }
 }
 
-async function request(path, options = {}) {
+function messageFromData(data, status) {
+  if (!data) return `Error ${status}`
+  if (data.errors) {
+    return Object.values(data.errors).flat().join(' ')
+  }
+  return data.detail || `Error ${status}`
+}
+
+async function request(path, options = {}, { redirectOn401 = true } = {}) {
   const method = (options.method || 'GET').toUpperCase()
   if (['POST', 'PUT', 'DELETE'].includes(method)) {
     await ensureCsrf()
   }
+
   const res = await fetch(path, {
     ...options,
     credentials: 'include',
@@ -28,27 +43,46 @@ async function request(path, options = {}) {
       ...(options.headers || {}),
     },
   })
+
   let data = null
   try {
     data = await res.json()
   } catch {
     data = null
   }
+
+  if (res.status === 401 && redirectOn401 && window.location.pathname !== '/login') {
+    window.location.assign('/login')
+  }
+
   if (!res.ok) {
-    const msg = (data && data.detail) || `Error ${res.status}`
-    throw new Error(Array.isArray(msg) ? msg.join(' ') : msg)
+    throw new ApiError(messageFromData(data, res.status), res.status, data)
   }
   return data
 }
 
 export const api = {
-  register: (payload) => request('/api/register/', { method: 'POST', body: JSON.stringify(payload) }),
+  csrf: () => request('/api/csrf/'),
   login: (payload) => request('/api/login/', { method: 'POST', body: JSON.stringify(payload) }),
   logout: () => request('/api/logout/', { method: 'POST' }),
-  me: () => request('/api/me/'),
-  listUsers: () => request('/api/users/'),
-  getUser: (id) => request(`/api/users/${id}/`),
-  createUser: (payload) => request('/api/users/', { method: 'POST', body: JSON.stringify(payload) }),
-  updateUser: (id, payload) => request(`/api/users/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }),
-  deleteUser: (id) => request(`/api/users/${id}/`, { method: 'DELETE' }),
+  me: () => request('/api/me/', {}, { redirectOn401: false }),
+
+  listRegions: () => request('/api/regions/'),
+  getRegion: (id) => request(`/api/regions/${id}/`),
+  createRegion: (payload) => request('/api/regions/', { method: 'POST', body: JSON.stringify(payload) }),
+  updateRegion: (id, payload) => request(`/api/regions/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteRegion: (id) => request(`/api/regions/${id}/`, { method: 'DELETE' }),
+
+  listBiotopes: () => request('/api/biotopes/'),
+  getBiotope: (id) => request(`/api/biotopes/${id}/`),
+  createBiotope: (payload) => request('/api/biotopes/', { method: 'POST', body: JSON.stringify(payload) }),
+  updateBiotope: (id, payload) => request(`/api/biotopes/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteBiotope: (id) => request(`/api/biotopes/${id}/`, { method: 'DELETE' }),
+  biotopesByRegion: (id) => request(`/api/regions/${id}/biotopes/`),
+
+  listSpecies: () => request('/api/species/'),
+  getSpecies: (id) => request(`/api/species/${id}/`),
+  createSpecies: (payload) => request('/api/species/', { method: 'POST', body: JSON.stringify(payload) }),
+  updateSpecies: (id, payload) => request(`/api/species/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteSpecies: (id) => request(`/api/species/${id}/`, { method: 'DELETE' }),
 }
